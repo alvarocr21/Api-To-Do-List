@@ -33,28 +33,37 @@ def sitemap():
 @app.route('/todos', methods=['GET'])
 def hello_world():
     # puedes convertir esa variable en un string json así
-    json_text =jsonify(todos)
+
+    # get all the people
+    todos = Todo.query.all()
+
+    # map the results and your list of people  inside of the all_people variable
+    all_todos = list(map(lambda x: x.serialize(), todos))
+    
+    json_text =jsonify(all_todos)
 
     return json_text
 
 @app.route('/todos', methods=['POST'])
 def add_new_todo():
-    request_body = request.data
-    decoded_object = json.loads(request_body)
-    todos.append(decoded_object)
-    #print("Incoming request with the following body", request_body)
-    json_text =jsonify(todos)
+    request_body = request.get_json()
+    todo = Todo(label=request_body["label"], done=request_body["done"])
+    db.session.add(todo)
+    db.session.commit()
 
-    return json_text
+    return jsonify({"Respuesta":"Los datos se almacenaron satisfactoriamente"}), 200
 
 
-@app.route('/todos/<int:position>', methods=['DELETE'])
-def delete_todo(position):
-    todos.pop(position)
-    #print("This is the position to delete: ",position)
-    json_text =jsonify(todos)
+@app.route('/todos/<int:id>', methods=['DELETE'])
+def delete_todo(id):
+    todo = Todo.query.get(id)
+    if todo is None:
+        raise APIException('Todo not found', status_code=404)
 
-    return json_text
+    db.session.delete(todo)
+    db.session.commit()
+   
+    return jsonify({"Respuesta":"Los datos se eliminaron satisfactoriamente"}), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
