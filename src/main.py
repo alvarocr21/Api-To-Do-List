@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, Todo
 #from models import Person
 
 app = Flask(__name__)
@@ -30,14 +30,31 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/todos', methods=['GET'])
+def hello_world():
+    # puedes convertir esa variable en un string json así
+    json_text =jsonify(todos)
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+    return json_text
 
-    return jsonify(response_body), 200
+@app.route('/todos', methods=['POST'])
+def add_new_todo():
+    request_body = request.data
+    decoded_object = json.loads(request_body)
+    todos.append(decoded_object)
+    #print("Incoming request with the following body", request_body)
+    json_text =jsonify(todos)
+
+    return json_text
+
+
+@app.route('/todos/<int:position>', methods=['DELETE'])
+def delete_todo(position):
+    todos.pop(position)
+    #print("This is the position to delete: ",position)
+    json_text =jsonify(todos)
+
+    return json_text
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
